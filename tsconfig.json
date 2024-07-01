@@ -29,5 +29,8 @@
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
+  },
+  "paths": {
+    "three/examples/jsm/controls/OrbitControls": ["node_modules/three/examples/jsm/controls/OrbitControls"]
   }
 }

@@ -1,0 +1,63 @@
+<div class="flex h-screen">
+  <div class="w-1/4 bg-gray-800 p-4 flex flex-col items-center">
+    <h2 class="text-xl mb-4 text-white">Tools</h2>
+    <div class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center" draggable="true" (dragstart)="onDragStart($event, 'cube')">
+      <i class="fas fa-cube text-white"></i>
+    </div>
+    <div class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center" draggable="true" (dragstart)="onDragStart($event, 'sphere')">
+      <i class="fas fa-circle text-white"></i>
+    </div>
+    <div class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center" draggable="true" (dragstart)="onDragStart($event, 'cylinder')">
+      <i class="fas fa-dice-d6 text-white"></i>
+    </div>
+    <div title="ice-cream" class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center" draggable="true" (dragstart)="onDragStart($event, 'cone')">
+      <i class="fas fa-ice-cream text-white"></i>
+    </div>
+    <button (click)="exportModel()" class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center">
+      <i class="fas fa-file-export text-white"></i>
+    </button>
+    <input type="file" (change)="loadSTL($event)" class="w-full mb-2 bg-gray-700 p-4 rounded flex justify-center text-white">
+  </div>
+  <div class="w-1/2 relative">
+    <canvas #canvas class="absolute top-0 left-0 w-full h-full" (drop)="onDrop($event)" (dragover)="onDragOver($event)" (contextmenu)="onRightClick($event)" (dblclick)="onDoubleClick($event)"></canvas>
+  </div>
+  <div class="w-1/4 bg-gray-800 p-4">
+    <h2 class="text-xl mb-4 text-white">Properties</h2>
+    <div *ngIf="selectedObject">
+      <label class="block text-white">Color</label>
+      <input type="color" (change)="setColor($event)" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <label class="block text-white">Position</label>
+      <input type="number" placeholder="X" [(ngModel)]="selectedObject.position.x" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <input type="number" placeholder="Y" [(ngModel)]="selectedObject.position.y" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <input type="number" placeholder="Z" [(ngModel)]="selectedObject.position.z" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <label class="block text-white">Scale</label>
+      <input type="number" placeholder="X" [(ngModel)]="selectedObject.scale.x" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <input type="number" placeholder="Y" [(ngModel)]="selectedObject.scale.y" class="w-full mb-2 bg-gray-700 p-2 rounded">
+      <input type="number" placeholder="Z" [(ngModel)]="selectedObject.scale.z" class="w-full mb-2 bg-gray-700 p-2 rounded">
+    </div>
+  </div>
+
+  <div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white p-4 rounded shadow-lg">
+      <h2 class="text-xl mb-4">Edit Object</h2>
+      <label>Color</label>
+      <input type="color" [(ngModel)]="modalObjectProperties.color" class="w-full mb-2 p-2 rounded">
+      <label>Position X</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.position.x" class="w-full mb-2 p-2 rounded">
+      <label>Position Y</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.position.y" class="w-full mb-2 p-2 rounded">
+      <label>Position Z</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.position.z" class="w-full mb-2 p-2 rounded">
+      <label>Scale X</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.scale.x" class="w-full mb-2 p-2 rounded">
+      <label>Scale Y</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.scale.y" class="w-full mb-2 p-2 rounded">
+      <label>Scale Z</label>
+      <input type="number" [(ngModel)]="modalObjectProperties.scale.z" class="w-full mb-2 p-2 rounded">
+      <div class="flex justify-end">
+        <button (click)="updateObject()" class="bg-blue-500 text-white p-2 rounded mr-2">Save</button>
+        <button (click)="closeModal()" class="bg-gray-500 text-white p-2 rounded">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

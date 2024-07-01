@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.flex {
+  display: flex;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.bg-gray-800 {
+  background-color: #2d3748;
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.bg-gray-700 {
+  background-color: #4a5568;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.block {
+  display: block;
+}
+
+.w-full {
+  width: 100%;
+}

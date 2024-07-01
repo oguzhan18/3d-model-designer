@@ -1,11 +1,11 @@
 import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 
 @Component({
   selector: 'app-three-js',
@@ -23,12 +23,8 @@ export class ThreeJsComponent implements OnInit {
   plane!: THREE.Mesh;
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
-  isDrawing = false;
-  drawColor = 0xBC40;
-  drawThickness = 1;
   currentTool = 'none';
   selectedObject: THREE.Mesh | null = null;
-  selectedObjectProperties: any = {};
   showModal: boolean = false;
   modalObjectProperties: any = {};
 
@@ -36,6 +32,7 @@ export class ThreeJsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initThreeJs();
+    this.loadObjectsFromLocalStorage();
   }
 
   @HostListener('window:resize', ['$event'])
@@ -71,7 +68,7 @@ export class ThreeJsComponent implements OnInit {
       });
       const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
       const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-      textMesh.rotation.x = -Math.PI / 2; // Lay the text flat
+      textMesh.rotation.x = -Math.PI / 2;
       textMesh.position.set(-2.5, 0.01, 0);
       this.scene.add(textMesh);
     });
@@ -82,6 +79,7 @@ export class ThreeJsComponent implements OnInit {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enablePan = false;
+    this.controls.enableRotate = false;
     this.controls.enableZoom = true;
 
     this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
@@ -127,9 +125,10 @@ export class ThreeJsComponent implements OnInit {
     const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(position);
-    mesh.position.y += 0.5; // Ensure object is above the plane
+    mesh.position.y += 0.5;
     this.scene.add(mesh);
     this.objects.push(mesh);
+    this.saveObjectsToLocalStorage();
   }
 
   onDragStart(event: DragEvent, tool: string): void {
@@ -161,7 +160,7 @@ export class ThreeJsComponent implements OnInit {
   }
 
   onMouseUp(event: MouseEvent): void {
-    this.isDrawing = false;
+    this.saveObjectsToLocalStorage();
   }
 
   onMouseMove(event: MouseEvent): void {
@@ -180,15 +179,7 @@ export class ThreeJsComponent implements OnInit {
       const selectedObject = intersects[0].object as THREE.Mesh;
       this.selectedObject = selectedObject;
       this.transformControls.attach(selectedObject);
-      this.addResizeHandles(selectedObject);
       this.updateSelectedObjectProperties();
-      this.showModal = true;
-      this.modalObjectProperties = {
-        color: (this.selectedObject.material as THREE.MeshBasicMaterial).color.getHexString(),
-        position: { ...this.selectedObject.position },
-        scale: { ...this.selectedObject.scale }
-      };
-      this.transformControls.setMode('scale');
     } else {
       this.transformControls.detach();
       this.selectedObject = null;
@@ -197,74 +188,33 @@ export class ThreeJsComponent implements OnInit {
   }
 
   updateSelectedObjectProperties(): void {
-    if (this.selectedObject && (this.selectedObject.material instanceof THREE.MeshBasicMaterial || this.selectedObject.material instanceof THREE.MeshPhongMaterial)) {
+    if (this.selectedObject && this.selectedObject.material instanceof THREE.MeshBasicMaterial) {
       const { x, y, z } = this.selectedObject.scale;
-      const { r, g, b } = (this.selectedObject.material as THREE.MeshBasicMaterial).color;
-      this.selectedObjectProperties = {
+      const { r, g, b } = this.selectedObject.material.color;
+      this.modalObjectProperties = {
         scaleX: x,
         scaleY: y,
         scaleZ: z,
-        color: `#${((1 << 24) + (r * 255 << 16) + (g * 255 << 8) + (b * 255)).toString(16).slice(1)}`
+        color: `#${((1 << 24) + (r * 255 << 16) + (g * 255 << 8) + (b * 255)).toString(16).slice(1)}`,
+        positionX: this.selectedObject.position.x,
+        positionY: this.selectedObject.position.y,
+        positionZ: this.selectedObject.position.z
       };
     }
   }
 
-  addResizeHandles(object: THREE.Object3D): void {
-    const resizeHandles = [];
-    const handleGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    const handleMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
-    const positions = [
-      new THREE.Vector3(1, 1, 1),
-      new THREE.Vector3(-1, 1, 1),
-      new THREE.Vector3(1, -1, 1),
-      new THREE.Vector3(-1, -1, 1),
-      new THREE.Vector3(1, 1, -1),
-      new THREE.Vector3(-1, 1, -1),
-      new THREE.Vector3(1, -1, -1),
-      new THREE.Vector3(-1, -1, -1)
-    ];
-
-    positions.forEach(position => {
-      const handle = new THREE.Mesh(handleGeometry, handleMaterial);
-      handle.position.copy(position.multiplyScalar(0.5));
-      object.add(handle);
-      resizeHandles.push(handle);
-    });
-  }
-
   updateObject(): void {
-    if (this.selectedObject) {
-      (this.selectedObject.material as THREE.MeshBasicMaterial).color.set(`#${this.modalObjectProperties.color}`);
-      this.selectedObject.position.set(
-        this.modalObjectProperties.position.x,
-        this.modalObjectProperties.position.y,
-        this.modalObjectProperties.position.z
-      );
-      this.selectedObject.scale.set(
-        this.modalObjectProperties.scale.x,
-        this.modalObjectProperties.scale.y,
-        this.modalObjectProperties.scale.z
-      );
-      this.closeModal();
+    if (this.selectedObject && this.selectedObject.material instanceof THREE.MeshBasicMaterial) {
+      this.selectedObject.material.color.set(this.modalObjectProperties.color);
+      this.selectedObject.position.set(this.modalObjectProperties.positionX, this.modalObjectProperties.positionY, this.modalObjectProperties.positionZ);
+      this.selectedObject.scale.set(this.modalObjectProperties.scaleX, this.modalObjectProperties.scaleY, this.modalObjectProperties.scaleZ);
+      this.showModal = false;
+      this.saveObjectsToLocalStorage();
     }
   }
 
   closeModal(): void {
     this.showModal = false;
-  }
-
-  setColor(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const color = parseInt(input.value.replace('#', '0x'));
-    if (this.selectedObject && (this.selectedObject.material instanceof THREE.MeshBasicMaterial || this.selectedObject.material instanceof THREE.MeshPhongMaterial)) {
-      (this.selectedObject.material as THREE.MeshBasicMaterial).color.set(color);
-    }
-  }
-
-  setThickness(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.drawThickness = input.valueAsNumber;
   }
 
   loadSTL(event: Event): void {
@@ -281,6 +231,7 @@ export class ThreeJsComponent implements OnInit {
         const mesh = new THREE.Mesh(geometry, material);
         this.scene.add(mesh);
         this.objects.push(mesh);
+        this.saveObjectsToLocalStorage();
       };
       reader.readAsArrayBuffer(file);
     }
@@ -308,6 +259,70 @@ export class ThreeJsComponent implements OnInit {
   }
 
   onDoubleClick(event: MouseEvent): void {
-    this.selectObject(event);
+    if (this.selectedObject) {
+      this.showModal = true;
+    }
+  }
+
+  moveCamera(direction: string): void {
+    const movementSpeed = 0.5;
+    switch (direction) {
+      case 'up':
+        this.camera.position.y += movementSpeed;
+        break;
+      case 'down':
+        this.camera.position.y -= movementSpeed;
+        break;
+      case 'left':
+        this.camera.position.x -= movementSpeed;
+        break;
+      case 'right':
+        this.camera.position.x += movementSpeed;
+        break;
+    }
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  saveObjectsToLocalStorage(): void {
+    const objectsData = this.objects.map(obj => ({
+      type: obj.geometry.type,
+      position: obj.position,
+      scale: obj.scale,
+      color: (obj.material as THREE.MeshBasicMaterial).color.getHexString()
+    }));
+    localStorage.setItem('threejs-objects', JSON.stringify(objectsData));
+  }
+
+  loadObjectsFromLocalStorage(): void {
+    const objectsData = localStorage.getItem('threejs-objects');
+    if (objectsData) {
+      const parsedObjects = JSON.parse(objectsData);
+      parsedObjects.forEach((objData: any) => {
+        let geometry;
+        switch (objData.type) {
+          case 'BoxGeometry':
+            geometry = new THREE.BoxGeometry(1, 1, 1);
+            break;
+          case 'SphereGeometry':
+            geometry = new THREE.SphereGeometry(0.5, 32, 32);
+            break;
+          case 'CylinderGeometry':
+            geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+            break;
+          case 'ConeGeometry':
+            geometry = new THREE.ConeGeometry(0.5, 1, 32);
+            break;
+          default:
+            return;
+        }
+        const material = new THREE.MeshBasicMaterial({ color: parseInt(objData.color, 16) });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(objData.position);
+        mesh.scale.copy(objData.scale);
+        this.scene.add(mesh);
+        this.objects.push(mesh);
+      });
+    }
   }
 }

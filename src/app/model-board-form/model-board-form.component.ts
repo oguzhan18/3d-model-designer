@@ -8,11 +8,11 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 
 @Component({
-  selector: 'app-three-js',
-  templateUrl: './three-js.component.html',
-  styleUrls: ['./three-js.component.scss']
+  selector: 'app-model-form-board',
+  templateUrl: './model-board-form.component.html',
+  styleUrls: ['./model-board-form.component.scss']
 })
-export class ThreeJsComponent implements OnInit {
+export class ModelBoradForm implements OnInit {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
   renderer!: THREE.WebGLRenderer;
   scene!: THREE.Scene;
@@ -35,14 +35,14 @@ export class ThreeJsComponent implements OnInit {
     this.loadObjectsFromLocalStorage();
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any): void {
+    @HostListener('window:resize', ['$event'])
+  public  onResize(event: any): void {
     this.camera.aspect = (window.innerWidth * 0.75) / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
   }
 
-  initThreeJs(): void {
+  private initThreeJs(): void {
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.nativeElement, antialias: true });
     this.renderer.setSize(window.innerWidth * 0.75, window.innerHeight);
 
@@ -98,11 +98,11 @@ export class ThreeJsComponent implements OnInit {
     this.renderer.domElement.addEventListener('dblclick', this.onDoubleClick.bind(this));
   }
 
-  setTool(tool: string): void {
+  public setTool(tool: string): void {
     this.currentTool = tool;
   }
 
-  addObject(tool: string, position: THREE.Vector3): void {
+  private addObject(tool: string, position: THREE.Vector3): void {
     let geometry;
 
     switch (tool) {
@@ -131,15 +131,15 @@ export class ThreeJsComponent implements OnInit {
     this.saveObjectsToLocalStorage();
   }
 
-  onDragStart(event: DragEvent, tool: string): void {
+  public onDragStart(event: DragEvent, tool: string): void {
     event.dataTransfer?.setData('text/plain', tool);
   }
 
-  onDragOver(event: DragEvent): void {
+  public onDragOver(event: DragEvent): void {
     event.preventDefault();
   }
 
-  onDrop(event: DragEvent): void {
+  public onDrop(event: DragEvent): void {
     event.preventDefault();
     const tool = event.dataTransfer?.getData('text/plain');
     if (tool) {
@@ -155,20 +155,20 @@ export class ThreeJsComponent implements OnInit {
     }
   }
 
-  onMouseDown(event: MouseEvent): void {
+  private onMouseDown(event: MouseEvent): void {
     this.selectObject(event);
   }
 
-  onMouseUp(event: MouseEvent): void {
+  private onMouseUp(event: MouseEvent): void {
     this.saveObjectsToLocalStorage();
   }
 
-  onMouseMove(event: MouseEvent): void {
+  private onMouseMove(event: MouseEvent): void {
     this.mouse.x = (event.clientX / (window.innerWidth * 0.75)) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
 
-  selectObject(event: MouseEvent): void {
+  private selectObject(event: MouseEvent): void {
     this.mouse.x = (event.clientX / (window.innerWidth * 0.75)) * 2 - 1;
     this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -187,7 +187,7 @@ export class ThreeJsComponent implements OnInit {
     }
   }
 
-  updateSelectedObjectProperties(): void {
+  private updateSelectedObjectProperties(): void {
     if (this.selectedObject && this.selectedObject.material instanceof THREE.MeshBasicMaterial) {
       const { x, y, z } = this.selectedObject.scale;
       const { r, g, b } = this.selectedObject.material.color;
@@ -203,7 +203,7 @@ export class ThreeJsComponent implements OnInit {
     }
   }
 
-  updateObject(): void {
+  public updateObject(): void {
     if (this.selectedObject && this.selectedObject.material instanceof THREE.MeshBasicMaterial) {
       this.selectedObject.material.color.set(this.modalObjectProperties.color);
       this.selectedObject.position.set(this.modalObjectProperties.positionX, this.modalObjectProperties.positionY, this.modalObjectProperties.positionZ);
@@ -213,11 +213,11 @@ export class ThreeJsComponent implements OnInit {
     }
   }
 
-  closeModal(): void {
+  public closeModal(): void {
     this.showModal = false;
   }
 
-  loadSTL(event: Event): void {
+  public loadSTL(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -237,13 +237,13 @@ export class ThreeJsComponent implements OnInit {
     }
   }
 
-  animate(): void {
+  private animate(): void {
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
 
-  exportModel(): void {
+  public exportModel(): void {
     const exporter = new STLExporter();
     const stlString = exporter.parse(this.scene);
     const blob = new Blob([stlString], { type: 'text/plain' });
@@ -253,18 +253,18 @@ export class ThreeJsComponent implements OnInit {
     link.click();
   }
 
-  onRightClick(event: MouseEvent): void {
+  public onRightClick(event: MouseEvent): void {
     event.preventDefault();
     this.selectObject(event);
   }
 
-  onDoubleClick(event: MouseEvent): void {
+  public onDoubleClick(event: MouseEvent): void {
     if (this.selectedObject) {
       this.showModal = true;
     }
   }
 
-  moveCamera(direction: string): void {
+  public moveCamera(direction: string): void {
     const movementSpeed = 0.5;
     switch (direction) {
       case 'up':
@@ -284,7 +284,7 @@ export class ThreeJsComponent implements OnInit {
     this.renderer.render(this.scene, this.camera);
   }
 
-  saveObjectsToLocalStorage(): void {
+  private saveObjectsToLocalStorage(): void {
     const objectsData = this.objects.map(obj => ({
       type: obj.geometry.type,
       position: obj.position,
@@ -294,7 +294,7 @@ export class ThreeJsComponent implements OnInit {
     localStorage.setItem('threejs-objects', JSON.stringify(objectsData));
   }
 
-  loadObjectsFromLocalStorage(): void {
+  private loadObjectsFromLocalStorage(): void {
     const objectsData = localStorage.getItem('threejs-objects');
     if (objectsData) {
       const parsedObjects = JSON.parse(objectsData);

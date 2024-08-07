@@ -29,7 +29,7 @@ Switch between light and dark mode to suit your preference or working environmen
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/3d-model-designer.git
+   git clone https://github.com/oguzhan18/3d-model-designer.git
 ```
 2. Navigate to the project directory:
   ```bash
